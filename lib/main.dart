@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
 import 'theme/app_theme.dart';
@@ -10,8 +11,29 @@ import 'pages/onboarding_page_3.dart';
 import 'pages/onboarding_flow.dart';
 import 'pages/file_browser_page.dart';
 import 'pages/model_viewer_page.dart';
+import 'pages/settings_page.dart';
 
-void main() {
+final ValueNotifier<ThemeMode> themeModeNotifier = ValueNotifier<ThemeMode>(ThemeMode.system);
+
+Future<void> _initSettings() async {
+  final prefs = await SharedPreferences.getInstance();
+  final modeStr = prefs.getString('themeMode');
+  switch (modeStr) {
+    case 'light':
+      themeModeNotifier.value = ThemeMode.light;
+      break;
+    case 'dark':
+      themeModeNotifier.value = ThemeMode.dark;
+      break;
+    case 'system':
+    default:
+      themeModeNotifier.value = ThemeMode.system;
+  }
+}
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await _initSettings();
   runApp(const MyApp());
 }
 
@@ -21,16 +43,21 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Blendy Box',
-      // 接入全局主题：避免样式硬编码，支持主题切换
-      theme: AppTheme.light(),
-      darkTheme: AppTheme.dark(),
-      themeMode: ThemeMode.system, // 后续也可以通过设置持久化切换主题
-      scrollBehavior: const AppScrollBehavior(),
-      home: const OnboardingFlowPage(),
-      routes: {
-        '/home': (context) => const HomePage(),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: themeModeNotifier,
+      builder: (_, mode, __) {
+        return MaterialApp(
+          title: 'Blendy Box',
+          // 接入全局主题：避免样式硬编码，支持主题切换
+          theme: AppTheme.light(),
+          darkTheme: AppTheme.dark(),
+          themeMode: mode,
+          scrollBehavior: const AppScrollBehavior(),
+          home: const OnboardingFlowPage(),
+          routes: {
+            '/home': (context) => const HomePage(),
+          },
+        );
       },
     );
   }
@@ -167,10 +194,17 @@ class _HomePageState extends State<HomePage> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text('我的3D模型', style: theme.textTheme.titleMedium?.copyWith(fontSize: 20, fontWeight: FontWeight.bold, color: cs.primary)),
-          IconButton(
-            onPressed: () {},
-            icon: Icon(Icons.search, color: cs.primary),
-          )
+          Row(children: [
+            IconButton(
+              onPressed: () {},
+              icon: Icon(Icons.search, color: cs.primary),
+            ),
+            IconButton(
+              tooltip: '设置',
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsPage())),
+              icon: Icon(Icons.settings, color: cs.primary),
+            ),
+          ])
         ],
       ),
     );
