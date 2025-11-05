@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'theme/app_theme.dart';
 import 'theme/design_tokens.dart';
 import 'pages/startup_page.dart';
+import 'pages/onboarding_page_1.dart';
+import 'pages/onboarding_page_2.dart';
+import 'pages/onboarding_page_3.dart';
+import 'pages/onboarding_flow.dart';
 
 void main() {
   runApp(const MyApp());
@@ -20,7 +24,10 @@ class MyApp extends StatelessWidget {
       darkTheme: AppTheme.dark(),
       themeMode: ThemeMode.system, // 后续也可以通过设置持久化切换主题
       scrollBehavior: const AppScrollBehavior(),
-      home: const StartupPage(),
+      home: const OnboardingFlowPage(),
+      routes: {
+        '/home': (context) => const HomePage(),
+      },
     );
   }
 }
