@@ -300,7 +300,17 @@ class _HomePageState extends State<HomePage> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('该文件来源不可预览（缺少路径）')));
       return;
     }
-    Navigator.push(context, MaterialPageRoute(builder: (_) => ModelViewerPage(title: f.name, src: src)));
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ModelViewerPage(
+          title: f.name,
+          src: src,
+          sizeBytes: f.sizeBytes,
+          openedAt: f.openedAt,
+        ),
+      ),
+    );
   }
 
   String _fmtDate(DateTime dt) {

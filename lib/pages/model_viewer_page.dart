@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:model_viewer_plus/model_viewer_plus.dart';
 import '../theme/design_tokens.dart';
+import 'model_detail_page.dart';
 
 /// 3D 模型预览页（参考原型：8. 3D模型预览页）
 /// - 使用 model_viewer_plus 真实预览 GLB/GLTF 模型
@@ -8,8 +9,16 @@ import '../theme/design_tokens.dart';
 class ModelViewerPage extends StatefulWidget {
   final String title;
   final String src; // 可为 assets 路径或本地文件路径
+  final int? sizeBytes;
+  final DateTime? openedAt;
 
-  const ModelViewerPage({super.key, required this.title, required this.src});
+  const ModelViewerPage({
+    super.key,
+    required this.title,
+    required this.src,
+    this.sizeBytes,
+    this.openedAt,
+  });
 
   @override
   State<ModelViewerPage> createState() => _ModelViewerPageState();
@@ -147,7 +156,22 @@ class _ModelViewerPageState extends State<ModelViewerPage> {
       children: [
         _action(Icons.refresh, '重置视角', _resetView),
         _action(Icons.fullscreen, '全屏', () => setState(() => _fullscreen = true)),
-        _action(Icons.info, '模型详情', () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('详情页即将支持'))), color: cs.primary),
+        _action(
+          Icons.info,
+          '模型详情',
+          () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ModelDetailPage(
+                title: widget.title,
+                src: widget.src,
+                sizeBytes: widget.sizeBytes,
+                openedAt: widget.openedAt,
+              ),
+            ),
+          ),
+          color: cs.primary,
+        ),
         _action(Icons.download, '导出', () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('导出功能即将支持')))),
       ],
     );
