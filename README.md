@@ -1,16 +1,83 @@
-# blendy_box
+# Blendy Box 🍱 模盒
 
-A new Flutter project.
+一款轻量、跨平台、可爱又好用的 3D 模型查看器（GLB/GLTF），基于 Flutter 构建，支持 Web 与 Android。让模型浏览这件小事，变得轻松又有趣 (๑•̀ㅂ•́)و✧
 
-## Getting Started
+## ✨ 功能一览
+- 模型预览：基于 `model_viewer_plus`，加载与展示 `GLB/GLTF` 模型（示例：`assets/models/goku.glb`）。
+- 文件浏览：`Web` 与 `移动/桌面` 分端适配的浏览与选择。
+- 设置中心：
+  - 主题切换（浅色/深色/系统），并持久化保存。
+  - 缓存查看与清理（非 Web 平台）。
+  - 帮助中心、意见反馈、关于 APP。
+- 引导页：初次使用友好引导，快速理解核心能力。
 
-This project is a starting point for a Flutter application.
+## 🚀 快速开始
+前置环境：安装 `Flutter`（稳定版），可选开启 Windows 开发者模式以支持插件 symlink。
 
-A few resources to get you started if this is your first Flutter project:
+1) 安装依赖
+```
+flutter pub get
+```
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+2) 运行 Web 预览（推荐）
+```
+flutter run -d chrome --web-port 7358 --web-hostname localhost
+```
+打开浏览器访问：`http://localhost:7358/`
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+3) 构建 Android APK
+```
+flutter build apk --release
+```
+输出文件：`build/app/outputs/flutter-apk/app-release.apk`
+
+更多发布到 GitHub Releases 的详细步骤，请参考根目录文档：`RELEASE.md`。
+
+## 🧩 项目结构
+```
+lib/
+  main.dart                  # 应用入口，主题和导航
+  pages/                     # 页面集合（设置、帮助、反馈、关于等）
+    settings_page.dart
+    help_page.dart
+    feedback_page.dart
+    about_page.dart
+    file_browser_page_*.dart # 针对 Web / IO 的文件浏览实现
+    model_viewer_page.dart   # 3D 模型展示入口
+  theme/
+    app_theme.dart           # 主题定义（明/暗）
+    design_tokens.dart       # 统一设计变量（间距、圆角、色板）
+  utils/
+    cache_utils.dart         # 条件导出，Web/IO 分别实现缓存计算与清理
+assets/
+  models/goku.glb            # 示例 3D 模型
+web/                         # Flutter Web 静态资源
+android/                     # Android 构建配置（Kotlin DSL）
+```
+
+## 🛠️ 技术栈
+- Flutter（Web、Android）
+- `model_viewer_plus`（基于 `<model-viewer>` 的 Flutter 包）
+- `shared_preferences`（主题持久化）
+- `path_provider`（缓存目录定位，非 Web）
+- `package_info_plus`（关于页应用信息）
+
+## 📦 版本与发布
+- 项目初始版本：`1.0.0`（建议 `pubspec.yaml` 设置为 `version: 1.0.0+1`）。
+- 发布到 GitHub Releases（含 APK）：详见 `RELEASE.md`。
+
+## 🗺️ 路线图（Roadmap）
+- 更多模型格式支持（如 `OBJ/FBX`，视包支持情况而定）。
+- 模型参数与材质调节面板。
+- 离线模型库与收藏夹。
+- 高级渲染选项（环境光、背景切换）。
+
+## 🤝 参与贡献
+- 欢迎提交 Issue/PR，或者留言提出你的想法与创意！
+- 代码风格与目录规范请参考现有实现，保持整洁统一 (｡•ᴗ•｡)♡
+
+## 💬 致谢
+- 感谢开源社区与优秀的 Flutter 包作者们：`model_viewer_plus`、`shared_preferences`、`path_provider`、`package_info_plus` 等。
+
+---
+用 Blendy Box，让 3D 模型浏览这件事变得简单快乐！(＾▽＾)／
