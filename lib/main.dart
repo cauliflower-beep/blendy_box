@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'theme/app_theme.dart';
+import 'theme/design_tokens.dart';
 
 void main() {
   runApp(const MyApp());
@@ -12,24 +14,11 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Blendy Box',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
+      // 接入全局主题：避免样式硬编码，支持主题切换
+      theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
+      themeMode: ThemeMode.system, // 后续也可以通过设置持久化切换主题
+      scrollBehavior: const AppScrollBehavior(),
       home: const HomePage(),
     );
   }
@@ -40,13 +29,54 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 通过 ThemeExtension 获取统一的间距令牌
+    final spacing = Theme.of(context).extension<AppSpacing>() ?? const AppSpacing(xs: 4, sm: 8, md: 12, lg: 16, xl: 24);
+
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: const Text('Blendy Box'),
       ),
-      body: const Center(
-        child: Text('欢迎使用 Blendy Box'),
+      body: Padding(
+        padding: EdgeInsets.all(spacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Card(
+              child: Padding(
+                padding: EdgeInsets.all(spacing.lg),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('卡片示例', style: Theme.of(context).textTheme.titleMedium),
+                    SizedBox(height: spacing.md),
+                    Text(
+                      '此卡片与按钮样式来自全局主题与设计令牌，避免硬编码。',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    SizedBox(height: spacing.lg),
+                    Row(
+                      children: [
+                        ElevatedButton(
+                          onPressed: () {},
+                          child: const Text('主按钮'),
+                        ),
+                        SizedBox(width: spacing.md),
+                        OutlinedButton(
+                          onPressed: () {},
+                          child: const Text('次按钮'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(height: spacing.xl),
+            Center(
+              child: Text('欢迎使用 Blendy Box', style: Theme.of(context).textTheme.bodyLarge),
+            ),
+          ],
+        ),
       ),
     );
   }
