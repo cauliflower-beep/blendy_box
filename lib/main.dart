@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'theme/app_theme.dart';
 import 'theme/design_tokens.dart';
+import 'pages/startup_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -19,7 +20,7 @@ class MyApp extends StatelessWidget {
       darkTheme: AppTheme.dark(),
       themeMode: ThemeMode.system, // 后续也可以通过设置持久化切换主题
       scrollBehavior: const AppScrollBehavior(),
-      home: const HomePage(),
+      home: const StartupPage(),
     );
   }
 }
