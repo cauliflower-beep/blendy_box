@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
 import 'theme/app_theme.dart';
 import 'theme/design_tokens.dart';
@@ -67,6 +68,29 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final List<ModelFile> _files = [];
   int _tabIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDefaultModel();
+  }
+
+  Future<void> _loadDefaultModel() async {
+    try {
+      // 从内置资源加载默认模型（例如 assets/models/goku.glb）
+      final data = await rootBundle.load('assets/models/goku.glb');
+      final now = DateTime.now();
+      setState(() {
+        _files.add(ModelFile(
+          name: 'goku.glb',
+          sizeBytes: data.lengthInBytes,
+          openedAt: now,
+        ));
+      });
+    } catch (_) {
+      // 如果资源不存在或加载失败，保持空列表，不影响页面
+    }
+  }
 
   Future<void> _importBlendFiles() async {
     // 允许在 Web/桌面/移动端选择 .blend 文件；Web 下使用 input[type=file]
