@@ -1,0 +1,11 @@
+Model Information:
+* title:	Angewomon TS
+* source:	https://sketchfab.com/3d-models/angewomon-ts-1aa289007d3e4a8dbbbc81e46f05c7dc
+* author:	ansaldotoys2 (https://sketchfab.com/ansaldotoys2)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Angewomon TS" (https://sketchfab.com/3d-models/angewomon-ts-1aa289007d3e4a8dbbbc81e46f05c7dc) by ansaldotoys2 (https://sketchfab.com/ansaldotoys2) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

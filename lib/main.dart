@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
@@ -107,19 +108,33 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _loadDefaultModel() async {
     try {
-      // 从内置资源加载默认模型（例如 assets/models/goku.glb）
-      final data = await rootBundle.load('assets/models/goku.glb');
+      // 遍历 AssetManifest，自动加载 assets/models/ 下的所有 GLB/GLTF
+      final manifestJson = await rootBundle.loadString('AssetManifest.json');
+      final Map<String, dynamic> manifest = json.decode(manifestJson) as Map<String, dynamic>;
+      final entries = manifest.keys.where((k) {
+        final lower = k.toLowerCase();
+        return lower.startsWith('assets/models/') && (lower.endsWith('.glb') || lower.endsWith('.gltf'));
+      }).toList();
+
+      if (entries.isEmpty) return;
       final now = DateTime.now();
-      setState(() {
-        _files.add(ModelFile(
-          name: 'goku.glb',
-          sizeBytes: data.lengthInBytes,
-          openedAt: now,
-          src: 'assets/models/goku.glb',
-        ));
-      });
+      final newFiles = <ModelFile>[];
+      for (final p in entries) {
+        try {
+          final data = await rootBundle.load(p);
+          final name = p.split('/').isNotEmpty ? p.split('/').last : p;
+          newFiles.add(ModelFile(name: name, sizeBytes: data.lengthInBytes, openedAt: now, src: p));
+        } catch (_) {
+          // 单个资产加载失败则忽略，不影响其他
+        }
+      }
+      if (newFiles.isNotEmpty) {
+        setState(() {
+          _files.addAll(newFiles);
+        });
+      }
     } catch (_) {
-      // 如果资源不存在或加载失败，保持空列表，不影响页面
+      // 如果读取清单失败或解析异常，保持空列表
     }
   }
 

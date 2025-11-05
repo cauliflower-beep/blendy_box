@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 释放版需要联网以加载 model-viewer JS/CDN 等资源 -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:label="blendy_box"
         android:name="${applicationName}"
