@@ -7,6 +7,7 @@ import 'pages/onboarding_page_1.dart';
 import 'pages/onboarding_page_2.dart';
 import 'pages/onboarding_page_3.dart';
 import 'pages/onboarding_flow.dart';
+import 'pages/file_browser_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -83,26 +84,28 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _pickBlendFiles() async {
-    // 真实实现：调用 file_picker
-    // 为保持风格一致，这里直接静态导入
+    // 进入自定义文件浏览页；根据平台返回不同数据结构
     try {
-      // 使用 file_picker 平台选择 .blend 文件
-      // ignore: depend_on_referenced_packages
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: const ['glb', 'gltf'],
-        withData: true,
-        allowMultiple: true,
-      );
-      if (result == null) return; // 用户取消
-      final now = DateTime.now();
-      setState(() {
-        for (final f in result.files) {
-          final name = f.name;
-          final size = f.size;
-          _files.add(ModelFile(name: name, sizeBytes: size, openedAt: now));
-        }
-      });
+      final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => const FileBrowserPage()));
+      if (result == null) return;
+      if (result is List<String>) {
+        // IO 平台返回的是绝对路径列表
+        final now = DateTime.now();
+        setState(() {
+          for (final p in result) {
+            final name = p.split('\\').isNotEmpty ? p.split('\\').last : (p.split('/').isNotEmpty ? p.split('/').last : p);
+            _files.add(ModelFile(name: name, sizeBytes: 0, openedAt: now));
+          }
+        });
+      } else if (result is List) {
+        // Web 平台返回的是文件名列表（路径不可用）
+        final now = DateTime.now();
+        setState(() {
+          for (final name in result.cast<String>()) {
+            _files.add(ModelFile(name: name, sizeBytes: 0, openedAt: now));
+          }
+        });
+      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('导入失败：$e')));
     }
