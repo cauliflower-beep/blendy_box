@@ -108,13 +108,37 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _loadDefaultModel() async {
     try {
-      // 遍历 AssetManifest，自动加载 assets/models/ 下的所有 GLB/GLTF
+      // 遍历 AssetManifest，递归解析，自动加载 assets/models/ 下的所有 GLB/GLTF（包含子目录）
       final manifestJson = await rootBundle.loadString('AssetManifest.json');
       final Map<String, dynamic> manifest = json.decode(manifestJson) as Map<String, dynamic>;
-      final entries = manifest.keys.where((k) {
-        final lower = k.toLowerCase();
-        return lower.startsWith('assets/models/') && (lower.endsWith('.glb') || lower.endsWith('.gltf'));
-      }).toList();
+
+      // 兼容不同 Manifest 结构：扁平化所有可能的路径键与值中的路径
+      final Set<String> allPaths = <String>{};
+      void collect(dynamic node) {
+        if (node is String) {
+          allPaths.add(node);
+        } else if (node is List) {
+          for (final v in node) {
+            collect(v);
+          }
+        } else if (node is Map) {
+          for (final entry in node.entries) {
+            final k = entry.key;
+            final v = entry.value;
+            if (k is String) {
+              allPaths.add(k);
+            }
+            collect(v);
+          }
+        }
+      }
+      collect(manifest);
+
+      final entries = allPaths.where((k) {
+        final lower = k.toLowerCase().replaceAll('\\', '/');
+        return lower.contains('assets/models/') && (lower.endsWith('.glb') || lower.endsWith('.gltf'));
+      }).toList()
+        ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
 
       if (entries.isEmpty) return;
       final now = DateTime.now();
