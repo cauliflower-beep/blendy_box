@@ -9,6 +9,7 @@ import 'pages/onboarding_page_2.dart';
 import 'pages/onboarding_page_3.dart';
 import 'pages/onboarding_flow.dart';
 import 'pages/file_browser_page.dart';
+import 'pages/model_viewer_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -41,12 +42,14 @@ class ModelFile {
   final int sizeBytes;
   final DateTime openedAt;
   bool favorite;
+  final String? src; // 资源/文件路径（资产或本地路径）
 
   ModelFile({
     required this.name,
     required this.sizeBytes,
     required this.openedAt,
     this.favorite = false,
+    this.src,
   });
 
   String get humanSize {
@@ -85,6 +88,7 @@ class _HomePageState extends State<HomePage> {
           name: 'goku.glb',
           sizeBytes: data.lengthInBytes,
           openedAt: now,
+          src: 'assets/models/goku.glb',
         ));
       });
     } catch (_) {
@@ -118,7 +122,7 @@ class _HomePageState extends State<HomePage> {
         setState(() {
           for (final p in result) {
             final name = p.split('\\').isNotEmpty ? p.split('\\').last : (p.split('/').isNotEmpty ? p.split('/').last : p);
-            _files.add(ModelFile(name: name, sizeBytes: 0, openedAt: now));
+            _files.add(ModelFile(name: name, sizeBytes: 0, openedAt: now, src: p));
           }
         });
       } else if (result is List) {
@@ -252,39 +256,51 @@ class _HomePageState extends State<HomePage> {
       itemBuilder: (context, index) {
         final f = files[index];
         return Card(
-          child: Padding(
-            padding: EdgeInsets.all(spacing.md),
-            child: Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(color: cs.primary.withOpacity(0.12), borderRadius: BorderRadius.circular(12)),
-                  alignment: Alignment.center,
-                  child: Icon(Icons.view_in_ar, color: cs.primary),
-                ),
-                SizedBox(width: spacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(f.name, style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurface)),
-                      SizedBox(height: spacing.xs),
-                      Text('${_fmtDate(f.openedAt)} · ${f.humanSize}',
-                          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.6))),
-                    ],
+          child: InkWell(
+            onTap: () => _openModel(f),
+            child: Padding(
+              padding: EdgeInsets.all(spacing.md),
+              child: Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(color: cs.primary.withOpacity(0.12), borderRadius: BorderRadius.circular(12)),
+                    alignment: Alignment.center,
+                    child: Icon(Icons.view_in_ar, color: cs.primary),
                   ),
-                ),
-                IconButton(
-                  onPressed: () => setState(() => f.favorite = !f.favorite),
-                  icon: Icon(f.favorite ? Icons.favorite : Icons.favorite_border, color: f.favorite ? cs.primary : theme.colorScheme.onSurface.withOpacity(0.4)),
-                ),
-              ],
+                  SizedBox(width: spacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(f.name, style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurface)),
+                        SizedBox(height: spacing.xs),
+                        Text('${_fmtDate(f.openedAt)} · ${f.humanSize}',
+                            style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.6))),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => setState(() => f.favorite = !f.favorite),
+                    icon: Icon(f.favorite ? Icons.favorite : Icons.favorite_border, color: f.favorite ? cs.primary : theme.colorScheme.onSurface.withOpacity(0.4)),
+                  ),
+                ],
+              ),
             ),
           ),
         );
       },
     );
+  }
+
+  void _openModel(ModelFile f) {
+    final src = f.src;
+    if (src == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('该文件来源不可预览（缺少路径）')));
+      return;
+    }
+    Navigator.push(context, MaterialPageRoute(builder: (_) => ModelViewerPage(title: f.name, src: src)));
   }
 
   String _fmtDate(DateTime dt) {
