@@ -8,7 +8,8 @@ plugins {
 android {
     namespace = "com.example.blendy_box"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    // 固定使用插件所需的更高 NDK 版本，避免与本地默认版本不一致
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

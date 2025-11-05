@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 import 'theme/app_theme.dart';
 import 'theme/design_tokens.dart';
 import 'pages/startup_page.dart';
@@ -32,60 +33,236 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class HomePage extends StatelessWidget {
+/// 简单的模型文件数据结构，用于列表展示与收藏标记
+class ModelFile {
+  final String name;
+  final int sizeBytes;
+  final DateTime openedAt;
+  bool favorite;
+
+  ModelFile({
+    required this.name,
+    required this.sizeBytes,
+    required this.openedAt,
+    this.favorite = false,
+  });
+
+  String get humanSize {
+    if (sizeBytes < 1024) return '$sizeBytes B';
+    final kb = sizeBytes / 1024;
+    if (kb < 1024) return '${kb.toStringAsFixed(1)}KB';
+    final mb = kb / 1024;
+    return '${mb.toStringAsFixed(1)}MB';
+  }
+}
+
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  final List<ModelFile> _files = [];
+  int _tabIndex = 0;
+
+  Future<void> _importBlendFiles() async {
+    // 允许在 Web/桌面/移动端选择 .blend 文件；Web 下使用 input[type=file]
+    try {
+      // 延迟加载，避免在无插件平台编译期报错
+      // ignore: import_of_legacy_library_into_null_safe
+      final picker = await Future.value(true);
+      // 动态引入以避免分析器警告（仍需在 pubspec 中声明依赖）
+      // 使用文件选择器
+      // NOTE: 直接使用类型：FileType.custom + allowedExtensions ['glb','gltf']
+      // 为了简单，这里采用在运行时导入包的方式书写在注释中；实际编译时静态导入即可。
+    } catch (_) {
+      // 忽略异常（例如权限或取消选择）
+    }
+  }
+
+  Future<void> _pickBlendFiles() async {
+    // 真实实现：调用 file_picker
+    // 为保持风格一致，这里直接静态导入
+    try {
+      // 使用 file_picker 平台选择 .blend 文件
+      // ignore: depend_on_referenced_packages
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: const ['glb', 'gltf'],
+        withData: true,
+        allowMultiple: true,
+      );
+      if (result == null) return; // 用户取消
+      final now = DateTime.now();
+      setState(() {
+        for (final f in result.files) {
+          final name = f.name;
+          final size = f.size;
+          _files.add(ModelFile(name: name, sizeBytes: size, openedAt: now));
+        }
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('导入失败：$e')));
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // 通过 ThemeExtension 获取统一的间距令牌
-    final spacing = Theme.of(context).extension<AppSpacing>() ?? const AppSpacing(xs: 4, sm: 8, md: 12, lg: 16, xl: 24);
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final spacing = theme.extension<AppSpacing>() ?? const AppSpacing(xs: 4, sm: 8, md: 12, lg: 16, xl: 24);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Blendy Box'),
-      ),
-      body: Padding(
-        padding: EdgeInsets.all(spacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Card(
-              child: Padding(
-                padding: EdgeInsets.all(spacing.lg),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('卡片示例', style: Theme.of(context).textTheme.titleMedium),
-                    SizedBox(height: spacing.md),
-                    Text(
-                      '此卡片与按钮样式来自全局主题与设计令牌，避免硬编码。',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    SizedBox(height: spacing.lg),
-                    Row(
-                      children: [
-                        ElevatedButton(
-                          onPressed: () {},
-                          child: const Text('主按钮'),
-                        ),
-                        SizedBox(width: spacing.md),
-                        OutlinedButton(
-                          onPressed: () {},
-                          child: const Text('次按钮'),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            SizedBox(height: spacing.xl),
-            Center(
-              child: Text('欢迎使用 Blendy Box', style: Theme.of(context).textTheme.bodyLarge),
-            ),
-          ],
+      body: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.all(spacing.lg),
+          child: _files.isEmpty ? _buildEmptyState(theme, cs, spacing) : _buildHasFiles(theme, cs, spacing),
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _pickBlendFiles,
+        backgroundColor: cs.primary,
+        child: const Icon(Icons.file_open, color: Colors.white),
       ),
     );
   }
+
+  Widget _buildTopBar(ThemeData theme, ColorScheme cs, AppSpacing spacing) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: spacing.lg),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text('我的3D模型', style: theme.textTheme.titleMedium?.copyWith(fontSize: 20, fontWeight: FontWeight.bold, color: cs.primary)),
+          IconButton(
+            onPressed: () {},
+            icon: Icon(Icons.search, color: cs.primary),
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(ThemeData theme, ColorScheme cs, AppSpacing spacing) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildTopBar(theme, cs, spacing),
+        Expanded(
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 160,
+                  height: 160,
+                  decoration: BoxDecoration(color: cs.primary.withOpacity(0.08), shape: BoxShape.circle),
+                  alignment: Alignment.center,
+                  child: Padding(
+                    padding: EdgeInsets.all(spacing.md),
+                    child: Icon(Icons.view_in_ar, color: cs.primary, size: 64),
+                  ),
+                ),
+                SizedBox(height: spacing.lg),
+                Text('还没有导入模型哦～', style: theme.textTheme.titleMedium?.copyWith(fontSize: 18, color: theme.colorScheme.onSurface)),
+                SizedBox(height: spacing.sm),
+                Text('导入你的 GLB/GLTF 文件，开始3D预览之旅',
+                    style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.6))),
+                SizedBox(height: spacing.xl),
+                ElevatedButton.icon(
+                  onPressed: _pickBlendFiles,
+                  icon: const Icon(Icons.add),
+                  label: const Text('立即导入模型'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHasFiles(ThemeData theme, ColorScheme cs, AppSpacing spacing) {
+    return DefaultTabController(
+      length: 2,
+      initialIndex: _tabIndex,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildTopBar(theme, cs, spacing),
+          TabBar(
+            onTap: (i) => setState(() => _tabIndex = i),
+            tabs: const [
+              Tab(text: '最近打开'),
+              Tab(text: '我的收藏'),
+            ],
+          ),
+          SizedBox(height: spacing.lg),
+          Expanded(
+            child: TabBarView(
+              children: [
+                _buildFileList(theme, cs, spacing, _files),
+                _buildFileList(theme, cs, spacing, _files.where((f) => f.favorite).toList()),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFileList(ThemeData theme, ColorScheme cs, AppSpacing spacing, List<ModelFile> files) {
+    if (files.isEmpty) {
+      return Center(
+        child: Text('暂无文件', style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.6))),
+      );
+    }
+    return ListView.separated(
+      itemCount: files.length,
+      separatorBuilder: (_, __) => SizedBox(height: spacing.sm),
+      itemBuilder: (context, index) {
+        final f = files[index];
+        return Card(
+          child: Padding(
+            padding: EdgeInsets.all(spacing.md),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(color: cs.primary.withOpacity(0.12), borderRadius: BorderRadius.circular(12)),
+                  alignment: Alignment.center,
+                  child: Icon(Icons.view_in_ar, color: cs.primary),
+                ),
+                SizedBox(width: spacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(f.name, style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurface)),
+                      SizedBox(height: spacing.xs),
+                      Text('${_fmtDate(f.openedAt)} · ${f.humanSize}',
+                          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.6))),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => setState(() => f.favorite = !f.favorite),
+                  icon: Icon(f.favorite ? Icons.favorite : Icons.favorite_border, color: f.favorite ? cs.primary : theme.colorScheme.onSurface.withOpacity(0.4)),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  String _fmtDate(DateTime dt) {
+    return '${dt.year}-${_two(dt.month)}-${_two(dt.day)}';
+  }
+
+  String _two(int n) => n < 10 ? '0$n' : '$n';
 }
